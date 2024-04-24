@@ -1,6 +1,7 @@
 import os
 
 class Piece:
+
     def __init__(self, name, color, value, texture = None, texture_rect = None):
         self.name = name
         self.color = color
@@ -11,7 +12,6 @@ class Piece:
         self.texture_rect = texture_rect
         self.moves = []
         self.moved = False
-        self.last_move = None
 
     def set_texture(self, size = 80):
         self.texture = os.path.join(

@@ -8,10 +8,10 @@ from move import Move
 class Main:
     def __init__(self):
         pygame.init()
-        self.screen = pygame.display.set_mode( (WIDTH, HEIGHT) )
+        self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
         pygame.display.set_caption('Chess')
         self.game = Game()
-        
+
 
     def mainloop(self):
 
@@ -60,9 +60,12 @@ class Main:
 
                     if dragger.dragging:
                         dragger.update_mouse(event.pos)
+                        
                         # self.game.set_bg(self.screen)
+                        # self.game.show_lastmove(self.screen)
                         # self.game.show_moves(self.screen)
                         # self.game.show_pieces(self.screen)
+                        # self.game.show_hover(self.screen)
                         dragger.update_blit(self.screen) 
 
                 # Release click
