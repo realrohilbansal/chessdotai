@@ -4,6 +4,7 @@ from const import *
 from game import Game
 from square import Square
 from move import Move
+import time
 
 class Main:
     def __init__(self):
@@ -17,6 +18,7 @@ class Main:
 
         board = self.game.board
         dragger = self.game.dragger
+        board.all_valid_moves()
 
         while True:
             self.game.set_bg(self.screen)
@@ -24,6 +26,7 @@ class Main:
             self.game.show_moves(self.screen)
             self.game.show_pieces(self.screen)
             self.game.show_hover(self.screen)
+
 
             if dragger.dragging:
                 dragger.update_blit(self.screen)
@@ -89,6 +92,46 @@ class Main:
                             self.game.show_lastmove(self.screen)
                             self.game.show_pieces(self.screen)
                             self.game.next_turn()
+                            board.all_valid_moves()
+                            checkmate_result = board.checkmate()
+                            if checkmate_result:
+                                text, won = checkmate_result
+                                textRect = text.get_rect()
+                                textRect.center = WIDTH // 2, HEIGHT // 2
+                                
+                                self.screen.blit(text, textRect)
+                                pygame.display.flip()
+                                # Wait until user presses escape
+                                while True:
+                                    for event in pygame.event.get():
+                                        if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                                            pygame.quit()
+                                            sys.exit()
+                                        elif event.type == pygame.QUIT:
+                                            pygame.quit()
+                                            sys.exit()
+                                            
+                                    time.sleep(0.1)
+
+
+                            stalemate_result = board.stalemate()
+                            if stalemate_result:
+                                text, won = stalemate_result
+                                textRect = text.get_rect()
+                                textRect.center = WIDTH // 2, HEIGHT // 2
+                                self.screen.blit(text, textRect)
+                                pygame.display.flip()
+                                while True:
+                                    for event in pygame.event.get():
+                                        if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                                            pygame.quit()
+                                            sys.exit()
+                                        elif event.type == pygame.QUIT:
+                                            pygame.quit()
+                                            sys.exit()
+
+                                    time.sleep(0.1)
+
 
                     dragger.undrag_piece()
 

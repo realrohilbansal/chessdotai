@@ -3,6 +3,7 @@ from square import Square
 from piece import *
 from move import Move
 import copy
+import pygame
 
 
 class Board:
@@ -365,21 +366,51 @@ class Board:
                             return True
 
         return False
+    
+    def checked(self, color):
+        temp_board = copy.deepcopy(self)
+        for row in range(NROWS):
+            for col in range(NCOLS):
+                if temp_board.squares[row][col].has_rivalpiece(color):
+                    p = temp_board.squares[row][col].piece
+                    temp_board.calc_moves(row, col, p, bool=False)
+                    for m in p.moves:
+                        if isinstance(m.final.piece, King):
+                            return True
+        return False
 
     def all_valid_moves(self):
         temp_board = copy.deepcopy(self)
+        self.valid_moves_list = []
 
         for row in range(NROWS):
             for col in range(NCOLS):
                 if temp_board.squares[row][col].has_teampiece(self.next_player):
                     p = temp_board.squares[row][col].piece
-                    temp_board.calc_moves(row, col, p, bool=False)
+                    temp_board.calc_moves(row, col, p, bool=True)
                     self.valid_moves_list.extend(p.moves)
         
         return
                     
 
+    def piece_opp(self, color):
+        return 'black' if color == 'white' else 'white'
+    
+    def checkmate(self):
+        if not self.valid_moves_list and self.checked(self.next_player):
+            print("CHECKMATE!")
+            print(f"{self.piece_opp(self.next_player).upper()} WON!")
+            font = pygame.font.Font(None, 100)
+            text = font.render(f"CHECKMATE!  {self.piece_opp(self.next_player).upper()} WON!", True, (255,255,255))
+            return (text, 1)
+        return
+    
+    def stalemate(self):
+        if not self.valid_moves_list and not self.checked(self.next_player):
+            print("STALEMATE!")
+            print("MATCH IS DRAW")
+            font = pygame.font.Font(None, 100)
+            text = font.render(f'STALEMATE!  MATCH IS DRAW!', True, (255,255,255))
+            return (text, 0)
+        return 
 
-
-    def _piece_opp(self, piece):
-        return 'black' if piece.color == 'white' else 'white'

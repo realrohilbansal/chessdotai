@@ -9,6 +9,9 @@ class Move:
         s += f'({self.initial.col}, {self.initial.row})'
         s += f' -> ({self.final.col}, {self.final.row})'
         return s
+    
+    def __repr__(self) -> str:
+        return self.__str__()
 
     def __eq__(self, other):
         return self.initial == other.initial and self.final == other.final
