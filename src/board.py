@@ -15,6 +15,7 @@ class Board:
 
         self._create()
         self._add_pieces('white')
+    
         self._add_pieces('black')
         self.last_move = None
 
@@ -22,6 +23,16 @@ class Board:
         for row in range(NROWS):
             for col in range(NCOLS):
                 self.squares[row][col] = Square(row, col)
+
+    def get_state(self):
+        return self.squares
+    
+    def get_next_state(self, action):
+        new_board = copy.deepcopy(self)
+        piece, move = action
+        new_board.move(piece, move, testing=False)
+        new_board.next_player = 'white' if new_board.next_player == 'black' else 'black'
+        return new_board
 
     def _add_pieces(self, color):
         row_pawn, row_others = (6, 7) if color == 'white' else (1, 0)
@@ -388,7 +399,7 @@ class Board:
                 if temp_board.squares[row][col].has_teampiece(self.next_player):
                     p = temp_board.squares[row][col].piece
                     temp_board.calc_moves(row, col, p, bool=True)
-                    self.valid_moves_list.extend(p.moves)
+                    self.valid_moves_list.extend((p, move) for move in p.moves)
         
         return
                     
@@ -403,7 +414,7 @@ class Board:
             font = pygame.font.Font(None, 100)
             text = font.render(f"CHECKMATE!  {self.piece_opp(self.next_player).upper()} WON!", True, (255,255,255))
             return (text, 1)
-        return
+        return None
     
     def stalemate(self):
         if not self.valid_moves_list and not self.checked(self.next_player):
@@ -412,5 +423,20 @@ class Board:
             font = pygame.font.Font(None, 100)
             text = font.render(f'STALEMATE!  MATCH IS DRAW!', True, (255,255,255))
             return (text, 0)
-        return 
+        return None
+    
+    def get_value_and_terminated(self):
+        checkmate_result = self.checkmate()
+        stalemate_result = self.stalemate()
+        if checkmate_result is not None:
+            text, value = checkmate_result
+            terminated = True
+        elif stalemate_result is not None:
+            text, value = stalemate_result
+            terminated = True
+        else:
+            text = None
+            value = 0
+            terminated = False
 
+        return text, value, terminated

@@ -12,6 +12,8 @@ class Game:
         self.next_player = 'white'
         self.hovered_sq = None        
 
+        self.action_size = 218
+
     def set_bg(self, surface):
         for row in range(NROWS):
             for col in range(NCOLS):
@@ -46,7 +48,7 @@ class Game:
                 pygame.draw.rect(surface, color, rect)
 
     def next_turn(self):
-        self.next_player = 'white' if self.next_player == 'black' else 'black'
+        # self.next_player = 'white' if self.next_player == 'black' else 'black'
         self.board.next_player = 'white' if self.board.next_player == 'black' else 'black'
 
     def show_lastmove(self, surface):

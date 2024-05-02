@@ -5,6 +5,9 @@ from game import Game
 from square import Square
 from move import Move
 import time
+from MCTS import MCTS
+# import numpy as np
+
 
 class Main:
     def __init__(self):
@@ -12,13 +15,19 @@ class Main:
         self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
         pygame.display.set_caption('Chess')
         self.game = Game()
+        self.args = {
+            'C': 1.41,
+            'num_searches': 3
+        }
 
+        self.mcts = MCTS(self.game, self.args)
 
     def mainloop(self):
 
         board = self.game.board
         dragger = self.game.dragger
         board.all_valid_moves()
+        print("Valid movies: ", board.valid_moves_list)
 
         while True:
             self.game.set_bg(self.screen)
@@ -27,113 +36,141 @@ class Main:
             self.game.show_pieces(self.screen)
             self.game.show_hover(self.screen)
 
-
             if dragger.dragging:
                 dragger.update_blit(self.screen)
-            
-            for event in pygame.event.get():
-                # Click
-                if event.type == pygame.MOUSEBUTTONDOWN:
-                    dragger.update_mouse(event.pos)
 
-                    clicked_row = dragger.MouseY // SQUARE_SIZE
-                    clicked_col = dragger.MouseX // SQUARE_SIZE
+            if board.next_player == 'black':
+                action = self.mcts.search()
+                piece, move = action
+                board.move(piece, move)
+                self.game.set_bg(self.screen)
+                self.game.show_lastmove(self.screen)
+                self.game.show_pieces(self.screen)
+                self.game.next_turn()
+                board.all_valid_moves()
 
-                    if board.squares[clicked_row][clicked_col].has_piece():
-                        piece = board.squares[clicked_row][clicked_col].piece
+                checkmate_result = board.checkmate()
+                stalemate_result = board.stalemate()
 
-                        if piece.color == self.game.next_player:
-                            board.calc_moves(clicked_row, clicked_col, piece, bool = True)
-                            dragger.save_initial(event.pos)
-                            dragger.drag_piece(piece)
+                if checkmate_result or stalemate_result:
+                    result = checkmate_result if checkmate_result is not None else stalemate_result
 
-                            self.game.set_bg(self.screen)
-                            self.game.show_lastmove(self.screen)
+                    text, won = result
+                    textRect = text.get_rect()
+                    textRect.center = WIDTH // 2, HEIGHT // 2
 
-                            self.game.show_moves(self.screen)
-                            self.game.show_pieces(self.screen)
-                        
-                # Move mouse
-                elif event.type == pygame.MOUSEMOTION:
-                    motion_row = event.pos[1] // SQUARE_SIZE
-                    motion_col = event.pos[0] // SQUARE_SIZE
+                    self.screen.blit(text, textRect)
+                    pygame.display.flip()
+                    # Wait until user presses escape
+                    while True:
+                        for event in pygame.event.get():
+                            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                                pygame.quit()
+                                sys.exit()
+                            elif event.type == pygame.QUIT:
+                                pygame.quit()
+                                sys.exit()
 
-                    if -1 < motion_row < 8 and -1 < motion_col < 8:
-                        self.game.set_hover(motion_row, motion_col)
+                        time.sleep(0.1)
 
-                    if dragger.dragging:
+                # Quit game
+                elif event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+
+                pygame.display.update()
+
+            else:
+
+                for event in pygame.event.get():
+                    # Click
+                    if event.type == pygame.MOUSEBUTTONDOWN:
                         dragger.update_mouse(event.pos)
-                        
-                        # self.game.set_bg(self.screen)
-                        # self.game.show_lastmove(self.screen)
-                        # self.game.show_moves(self.screen)
-                        # self.game.show_pieces(self.screen)
-                        # self.game.show_hover(self.screen)
-                        dragger.update_blit(self.screen) 
 
-                # Release click
-                elif event.type == pygame.MOUSEBUTTONUP:
-                    if dragger.dragging:
-                        dragger.update_mouse(event.pos)
+                        clicked_row = dragger.MouseY // SQUARE_SIZE
+                        clicked_col = dragger.MouseX // SQUARE_SIZE
 
-                        released_row = dragger.MouseY // SQUARE_SIZE
-                        released_col = dragger.MouseX // SQUARE_SIZE
+                        if board.squares[clicked_row][clicked_col].has_piece():
+                            piece = board.squares[clicked_row][clicked_col].piece
 
-                        initial_row = dragger.InitialRow
-                        initial_col = dragger.InitialCol
+                            if piece.color == self.game.next_player:
+                                board.calc_moves(
+                                    clicked_row, clicked_col, piece, bool=True)
+                                dragger.save_initial(event.pos)
+                                dragger.drag_piece(piece)
 
-                        initial = Square(initial_row, initial_col)
-                        final = Square(released_row, released_col)
-                        move = Move(initial, final)
+                                self.game.set_bg(self.screen)
+                                self.game.show_lastmove(self.screen)
 
-                        if board.valid_moves(dragger.piece, move):
-                            board.move(dragger.piece, move)
-                            self.game.set_bg(self.screen)
-                            self.game.show_lastmove(self.screen)
-                            self.game.show_pieces(self.screen)
-                            self.game.next_turn()
-                            board.all_valid_moves()
-                            checkmate_result = board.checkmate()
-                            if checkmate_result:
-                                text, won = checkmate_result
-                                textRect = text.get_rect()
-                                textRect.center = WIDTH // 2, HEIGHT // 2
-                                
-                                self.screen.blit(text, textRect)
-                                pygame.display.flip()
-                                # Wait until user presses escape
-                                while True:
-                                    for event in pygame.event.get():
-                                        if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                                            pygame.quit()
-                                            sys.exit()
-                                        elif event.type == pygame.QUIT:
-                                            pygame.quit()
-                                            sys.exit()
-                                            
-                                    time.sleep(0.1)
+                                self.game.show_moves(self.screen)
+                                self.game.show_pieces(self.screen)
 
+                    # Move mouse
+                    elif event.type == pygame.MOUSEMOTION:
+                        motion_row = event.pos[1] // SQUARE_SIZE
+                        motion_col = event.pos[0] // SQUARE_SIZE
 
-                            stalemate_result = board.stalemate()
-                            if stalemate_result:
-                                text, won = stalemate_result
-                                textRect = text.get_rect()
-                                textRect.center = WIDTH // 2, HEIGHT // 2
-                                self.screen.blit(text, textRect)
-                                pygame.display.flip()
-                                while True:
-                                    for event in pygame.event.get():
-                                        if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                                            pygame.quit()
-                                            sys.exit()
-                                        elif event.type == pygame.QUIT:
-                                            pygame.quit()
-                                            sys.exit()
+                        if -1 < motion_row < 8 and -1 < motion_col < 8:
+                            self.game.set_hover(motion_row, motion_col)
 
-                                    time.sleep(0.1)
+                        if dragger.dragging:
+                            dragger.update_mouse(event.pos)
 
+                            # self.game.set_bg(self.screen)
+                            # self.game.show_lastmove(self.screen)
+                            # self.game.show_moves(self.screen)
+                            # self.game.show_pieces(self.screen)
+                            # self.game.show_hover(self.screen)
+                            dragger.update_blit(self.screen)
 
-                    dragger.undrag_piece()
+                    # Release click
+                    elif event.type == pygame.MOUSEBUTTONUP:
+                        if dragger.dragging:
+                            dragger.update_mouse(event.pos)
+
+                            released_row = dragger.MouseY // SQUARE_SIZE
+                            released_col = dragger.MouseX // SQUARE_SIZE
+
+                            initial_row = dragger.InitialRow
+                            initial_col = dragger.InitialCol
+
+                            initial = Square(initial_row, initial_col)
+                            final = Square(released_row, released_col)
+                            move = Move(initial, final)
+
+                            if board.valid_moves(dragger.piece, move):
+                                board.move(dragger.piece, move)
+                                self.game.set_bg(self.screen)
+                                self.game.show_lastmove(self.screen)
+                                self.game.show_pieces(self.screen)
+                                self.game.next_turn()
+                                board.all_valid_moves()
+
+                                checkmate_result = board.checkmate()
+                                stalemate_result = board.stalemate()
+
+                                if checkmate_result or stalemate_result:
+                                    result = checkmate_result if checkmate_result is not None else stalemate_result
+
+                                    text, won = result
+                                    textRect = text.get_rect()
+                                    textRect.center = WIDTH // 2, HEIGHT // 2
+
+                                    self.screen.blit(text, textRect)
+                                    pygame.display.flip()
+                                    # Wait until user presses escape
+                                    while True:
+                                        for event in pygame.event.get():
+                                            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                                                pygame.quit()
+                                                sys.exit()
+                                            elif event.type == pygame.QUIT:
+                                                pygame.quit()
+                                                sys.exit()
+
+                                        time.sleep(0.1)
+
+                        dragger.undrag_piece()
 
                 # Key press
                 # elif event.type == pygame.KEYDOWN:
@@ -146,12 +183,13 @@ class Main:
                 #         pygame.quit()
                 #         sys.exit()
 
-                # Quit game
-                elif event.type == pygame.QUIT:
-                    pygame.quit()
-                    sys.exit()
+                    # Quit game
+                    elif event.type == pygame.QUIT:
+                        pygame.quit()
+                        sys.exit()
 
-            pygame.display.update()
+                pygame.display.update()
+
 
 main = Main()
 main.mainloop()

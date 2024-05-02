@@ -13,6 +13,9 @@ class Piece:
         self.moves = []
         self.moved = False
 
+    def __repr__(self) -> str:
+        return self.name + self.color
+
     def set_texture(self, size = 80):
         self.texture = os.path.join(
             f'assets/images/imgs-{size}px/{self.color}_{self.name}.png'
