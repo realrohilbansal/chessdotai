@@ -142,7 +142,11 @@ class Main:
                                 board.move(dragger.piece, move)
                                 self.game.set_bg(self.screen)
                                 self.game.show_lastmove(self.screen)
+
+                                dragger.undrag_piece()
                                 self.game.show_pieces(self.screen)
+                                pygame.display.update()
+
                                 self.game.next_turn()
                                 board.all_valid_moves()
 
@@ -171,6 +175,7 @@ class Main:
                                         time.sleep(0.1)
 
                         dragger.undrag_piece()
+                        pygame.display.update()
 
                 # Key press
                 # elif event.type == pygame.KEYDOWN:

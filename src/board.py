@@ -32,6 +32,7 @@ class Board:
         piece, move = action
         new_board.move(piece, move, testing=False)
         new_board.next_player = 'white' if new_board.next_player == 'black' else 'black'
+        new_board.all_valid_moves()
         return new_board
 
     def _add_pieces(self, color):

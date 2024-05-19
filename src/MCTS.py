@@ -56,9 +56,9 @@ class Node:
             return value if self.board.next_player == 'white' else (-1 * value)
         
         rollout_state = copy.deepcopy(self.board)
+        rollout_state.all_valid_moves()
         # rollout_player = 1
         while True:
-            rollout_state.all_valid_moves()
             action_id = np.random.choice(len(rollout_state.valid_moves_list))
             action = rollout_state.valid_moves_list.pop(action_id)
             rollout_state = rollout_state.get_next_state(action)
