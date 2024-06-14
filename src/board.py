@@ -412,7 +412,7 @@ class Board:
         if not self.valid_moves_list and self.checked(self.next_player):
             print("CHECKMATE!")
             print(f"{self.piece_opp(self.next_player).upper()} WON!")
-            font = pygame.font.Font(None, 100)
+            font = pygame.font.Font(None, 80)
             text = font.render(f"CHECKMATE!  {self.piece_opp(self.next_player).upper()} WON!", True, (255,255,255))
             return (text, 1)
         return None
@@ -421,7 +421,7 @@ class Board:
         if not self.valid_moves_list and not self.checked(self.next_player):
             print("STALEMATE!")
             print("MATCH IS DRAW")
-            font = pygame.font.Font(None, 100)
+            font = pygame.font.Font(None, 80)
             text = font.render(f'STALEMATE!  MATCH IS DRAW!', True, (255,255,255))
             return (text, 0)
         return None

@@ -6,11 +6,11 @@ from square import Square
 from move import Move
 import time
 from MCTS import MCTS
-# import numpy as np
+import log
 
 
 class Main:
-    def __init__(self):
+    def __init__(self, model="MCTS"):
         pygame.init()
         self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
         pygame.display.set_caption('Chess')
@@ -19,6 +19,12 @@ class Main:
             'C': 1.41,
             'num_searches': 3
         }
+        self.model = model
+        self.move_times = []
+        self.game_start_time = time.time()
+        
+        log.startrun()
+        log.logparams(self.args)
 
         self.mcts = MCTS(self.game, self.args)
 
@@ -40,22 +46,33 @@ class Main:
                 dragger.update_blit(self.screen)
 
             if board.next_player == 'black':
+                move_start_time = time.time()
                 action = self.mcts.search()
                 piece, move = action
                 board.move(piece, move)
+                move_end_time = time.time()
+                self.move_times.append(move_end_time - move_start_time)
                 self.game.set_bg(self.screen)
                 self.game.show_lastmove(self.screen)
                 self.game.show_pieces(self.screen)
                 self.game.next_turn()
                 board.all_valid_moves()
 
-                checkmate_result = board.checkmate()
-                stalemate_result = board.stalemate()
+                text, value, terminated = board.get_value_and_terminated()
+                if terminated:
+                    game_end_time = time.time()
+                    total_game_runtime = game_end_time - self.game_start_time
+                    
+                    log.logmetrics(self.move_times, total_game_runtime)
+                    log.endrun()
+                    
+                    print("Game terminated")
+                    print("Value: ", value)
+                    print("Text: ", text)
+                    if value==1:
+                        print("Winner: ", board.piece_opp(board.next_player))
+                    
 
-                if checkmate_result or stalemate_result:
-                    result = checkmate_result if checkmate_result is not None else stalemate_result
-
-                    text, won = result
                     textRect = text.get_rect()
                     textRect.center = WIDTH // 2, HEIGHT // 2
 
@@ -149,14 +166,22 @@ class Main:
 
                                 self.game.next_turn()
                                 board.all_valid_moves()
+                                
+                                text, value, terminated = board.get_value_and_terminated()
+                                if terminated:
+                                    game_end_time = time.time()
+                                    total_game_runtime = game_end_time - self.game_start_time
+                                    
+                                    log.logmetrics(self.move_times, total_game_runtime)
+                                    log.endrun()
+                                    
+                                    print("Game terminated")
+                                    print("Value: ", value)
+                                    print("Text: ", text)
+                                    if value==1:
+                                        print("Winner: ", board.piece_opp(board.next_player))
+                                    
 
-                                checkmate_result = board.checkmate()
-                                stalemate_result = board.stalemate()
-
-                                if checkmate_result or stalemate_result:
-                                    result = checkmate_result if checkmate_result is not None else stalemate_result
-
-                                    text, won = result
                                     textRect = text.get_rect()
                                     textRect.center = WIDTH // 2, HEIGHT // 2
 
@@ -196,5 +221,5 @@ class Main:
                 pygame.display.update()
 
 
-main = Main()
+main = Main(model="MCTS")
 main.mainloop()

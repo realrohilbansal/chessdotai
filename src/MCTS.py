@@ -17,7 +17,6 @@ class Node:
 
         self.visit_count = 0
         self.value_sum = 0
-        print("NEW NODE CREATED")
 
     def is_fully_expanded(self):
         return len(self.expandable_moves) == 0

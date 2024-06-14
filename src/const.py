@@ -1,4 +1,4 @@
-# DImensions of the game screen
+# Dimensions of the game screen
 WIDTH = 800
 HEIGHT = 800
 
